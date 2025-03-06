@@ -4,9 +4,32 @@
 
 NordBot is an intelligent chatbot designed to provide expert guidance on the Nord Electro 6, Nord Piano 5, Nord Stage 3, and Nord Stage 4. Powered by advanced retrieval-augmented generation (RAG), NordBot has direct access to the official user manuals, allowing it to deliver accurate, in-depth, and reliable answers to any questions related to these keyboards.
 
+## Features
+
+> ```
+> - Instant access to detailed technical information from stored manuals
+> ```
+>
+> ```
+> - Clear and precise responses without unnecessary filler
+> ```
+>
+> ```
+> - Provides expert opinions based solely on official documentation
+> ```
+>
+> ```
+> - Helps with setup, sound design, effects, connectivity, troubleshooting, and more
+> ```
+>
+> ```
+> - Ensures that all responses stay within the scope of the stored Nord manuals
+> ```
+
 ## Table of Contents
 
 - [Description](#description)
+- [Features](#features)
 - [Installation](#installation)
 - [Usage](#usage)
 - [License](#license)
