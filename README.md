@@ -1,4 +1,4 @@
-# NordBot - Your Ultimate Nord Keyboard Assistant
+# NordBot - Your Ultimate Nord Keyboard Assistant 🎹
 
 ## Description
 
