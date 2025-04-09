@@ -73,54 +73,68 @@ generation_config = genai.types.GenerationConfig(candidate_count=1, max_output_t
 gemini_llm = genai.GenerativeModel(model_name='gemini-2.0-flash-exp', generation_config=generation_config)
 
 # Initialize chat history
-if "messages" not in st.session_state:
-    st.session_state.messages = []
 
 
 # Display chat messages from history on app rerun
-for message in st.session_state.messages:
-    with st.chat_message(message["role"]):
-        st.write(message["content"])
         
 # Chat interface
-user_question = st.text_area("Ask a question:", key="user_question", value=st.session_state.get("user_question", ""))
+if "messages" not in st.session_state:
+    st.session_state.messages = []
 
+chat_container = st.container()
+input_container = st.container()
+user_question = st.text_input("Ask a question:", key="user_question", value=st.session_state.get("user_question", ""))
 ask_button = st.button("Ask", key="ask_button")
 
 if ask_button:
-    # Grounding Search
-    grounding_model = genai.GenerativeModel(model_name='gemini-2.0-flash-exp', generation_config=genai.types.GenerationConfig(temperature=grounding_temperature))
-    grounding_prompt_with_question = grounding_prompt.format(user_question=user_question)
-    grounding_response = grounding_model.generate_content(grounding_prompt_with_question)
-    grounding_results = grounding_response.text
+    with st.spinner("Loading..."):
+        # Grounding Search
+        grounding_model = genai.GenerativeModel(model_name='gemini-2.0-flash-exp', generation_config=genai.types.GenerationConfig(temperature=grounding_temperature))
+        grounding_prompt_with_question = grounding_prompt.format(user_question=user_question)
+        grounding_response = grounding_model.generate_content(grounding_prompt_with_question)
+        grounding_results = grounding_response.text
 
-    # RAG Search
-    rag_model = genai.GenerativeModel(model_name='gemini-2.0-flash-exp', generation_config=genai.types.GenerationConfig(temperature=rag_temperature))
-    index = pinecone.Index(pinecone_index_name)
-    xq = genai.embed_content(
-        model="models/embedding-001",
-        content=user_question,
-        task_type="retrieval_query",
-    )
-    results = index.query(vector=xq['embedding'], top_k=5, include_metadata=True)
-    contexts = [match.metadata['text'] for match in results.matches]
-    rag_prompt_with_context = rag_prompt.format(user_question=user_question) + "\nContext:\n" + chr(10).join(contexts)
-    rag_response = rag_model.generate_content(rag_prompt_with_context)
-    rag_results = rag_response.text
+        # RAG Search
+        rag_model = genai.GenerativeModel(model_name='gemini-2.0-flash-exp', generation_config=genai.types.GenerationConfig(temperature=rag_temperature))
+        index = pinecone.Index(pinecone_index_name)
+        xq = genai.embed_content(
+            model="models/embedding-001",
+            content=user_question if user_question else "test",
+            task_type="retrieval_query",
+        )
+        results = index.query(vector=xq['embedding'], top_k=5, include_metadata=True)
+        contexts = [match.metadata['text'] for match in results.matches]
+        rag_prompt_with_context = rag_prompt.format(user_question=user_question) + "\nContext:\n" + chr(10).join(contexts)
+        rag_response = rag_model.generate_content(rag_prompt_with_context)
+        rag_results = rag_response.text
 
-    # Response Synthesis
-    synthesis_model = genai.GenerativeModel(model_name='gemini-2.0-flash-exp', generation_config=genai.types.GenerationConfig(temperature=synthesis_temperature))
-    synthesis_prompt_with_results = synthesis_prompt.format(grounding_results=grounding_results, rag_results=rag_results)
-    
-    try:
-        response = synthesis_model.generate_content(synthesis_prompt_with_results)
-        with st.chat_message("user"):
-            st.write(user_question)
-            st.session_state.messages.append({"role": "user", "content": user_question})
+        # Response Synthesis
+        synthesis_model = genai.GenerativeModel(model_name='gemini-2.0-flash-exp', generation_config=genai.types.GenerationConfig(temperature=synthesis_temperature))
+        synthesis_prompt_with_results = synthesis_prompt.format(grounding_results=grounding_results, rag_results=rag_results)
 
-        with st.chat_message("assistant"):
-            st.write(response.text)
-            st.session_state.messages.append({"role": "assistant", "content": response.text})
+        try:
+            response = synthesis_model.generate_content(synthesis_prompt_with_results)
+        except Exception as e:
+            st.write(f"An error occurred: {e}")
 
-    except Exception as e:
-        st.write(f"An error occurred: {e}")
+with chat_container:
+    for message in st.session_state.messages:
+        with st.chat_message(message["role"]):
+            st.write(message["content"])
+    if ask_button:
+        try:
+            response = synthesis_model.generate_content(synthesis_prompt_with_results)
+            with st.chat_message("user"):
+                st.write(user_question)
+                st.session_state.messages.append({"role": "user", "content": user_question})
+
+            with st.chat_message("assistant"):
+                st.write(response.text)
+                st.session_state.messages.append({"role": "assistant", "content": response.text})
+
+        except Exception as e:
+            st.write(f"An error occurred: {e}")
+
+with input_container:
+    pass
+
