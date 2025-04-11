@@ -86,7 +86,7 @@ input_container = st.container()
 user_question = st.text_input("Ask a question:", key="user_question", value=st.session_state.get("user_question", ""))
 ask_button = st.button("Ask", key="ask_button")
 
-if ask_button:
+if user_question:
     with st.spinner("Loading..."):
         # Grounding Search
         grounding_model = genai.GenerativeModel(model_name='gemini-2.0-flash-exp', generation_config=genai.types.GenerationConfig(temperature=grounding_temperature))
@@ -117,11 +117,10 @@ if ask_button:
         except Exception as e:
             st.write(f"An error occurred: {e}")
 
-with chat_container:
-    for message in st.session_state.messages:
-        with st.chat_message(message["role"]):
-            st.write(message["content"])
-    if ask_button:
+    with chat_container:
+        for message in st.session_state.messages:
+            with st.chat_message(message["role"]):
+                st.write(message["content"])
         try:
             response = synthesis_model.generate_content(synthesis_prompt_with_results)
             with st.chat_message("user"):
