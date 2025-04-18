@@ -83,8 +83,29 @@ if "messages" not in st.session_state:
 
 chat_container = st.container()
 input_container = st.container()
-user_question = st.text_input("Ask a question:", key="user_question", value=st.session_state.get("user_question", ""))
-ask_button = st.button("Ask", key="ask_button")
+st.markdown("""
+    <style>
+        div.stTextInput>div>div>input {
+            width: 100% !important;
+        }
+    </style>
+""", unsafe_allow_html=True)
+
+col1, col2 = st.columns([11, 1])
+
+with col1:
+    user_question = st.text_input("Ask a question:", key="user_question", value=st.session_state.get("user_question", ""))
+
+with col2:
+    st.markdown("""
+        <style>
+            div.stButton>button {
+
+                margin-top: 12px;
+            }
+        </style>
+    """, unsafe_allow_html=True)
+    ask_button = st.button("Ask", key="ask_button")
 
 if user_question:
     with st.spinner("Loading..."):
